@@ -1,5 +1,14 @@
+import { useEffect, useState } from "react";
+
 function EmployeeDetails({
   employee,
+
+  userAccount,
+  userAccountLoading,
+  isAdmin,
+  onViewUserAccount,
+  onUpdateRole,
+
   sensitiveEmployee,
   sensitiveLoading,
 
@@ -8,11 +17,19 @@ function EmployeeDetails({
 
   onClose,
   onViewSensitive,
-  onEditSensitive,
-
   onViewLeaveBalance,
+  onEditSensitive,
   onEditLeaveBalance,
 }) {
+
+  const [selectedRole, setSelectedRole] = useState("");
+
+  useEffect(() => {
+    if (userAccount) {
+      setSelectedRole(userAccount.role);
+    }
+  }, [userAccount]);
+
   if (!employee) return null;
 
   return (
@@ -223,7 +240,7 @@ function EmployeeDetails({
         </section>
 
         {/* Sensitive Information */}
-        <section>
+        <section className="mb-6">
           <div className="flex items-start justify-between mb-3">
             <div>
               <h3 className="fj-display font-semibold">
@@ -292,6 +309,102 @@ function EmployeeDetails({
             </div>
           )}
         </section>
+
+        {/* Account & Permissions */}
+        {isAdmin && (
+          <section className="mb-6">
+            <div className="flex items-start justify-between mb-3">
+              <div>
+                <h3 className="fj-display font-semibold">
+                  Account & Permissions
+                </h3>
+
+                <p
+                  className="text-xs"
+                  style={{ color: "var(--ink-soft)" }}
+                >
+                  Administrative account access
+                </p>
+              </div>
+            </div>
+
+            {!userAccount && !userAccountLoading && (
+              <button
+                type="button"
+                className="fj-btn-secondary text-sm"
+                onClick={onViewUserAccount}
+              >
+                View Account
+              </button>
+            )}
+
+            {userAccountLoading && (
+              <p
+                className="text-sm"
+                style={{ color: "var(--ink-soft)" }}
+              >
+                Loading account...
+              </p>
+            )}
+
+            {userAccount && (
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="lms-field-label">
+                    System Role
+                  </p>
+
+                  <select
+                    className="lms-field-input"
+                    value={selectedRole}
+                    onChange={(e) =>
+                      setSelectedRole(e.target.value)
+                    }
+                  >
+                    <option value="EMPLOYEE">
+                      Employee
+                    </option>
+
+                    <option value="HR">
+                      HR
+                    </option>
+
+                    <option value="ADMIN">
+                      Admin
+                    </option>
+                  </select>
+                </div>
+
+                <div>
+                  <p className="lms-field-label">
+                    Account Status
+                  </p>
+
+                  <p>
+                    {userAccount.enabled
+                      ? "Enabled"
+                      : "Disabled"}
+                  </p>
+                </div>
+
+                <div className="col-span-2">
+                  <button
+                    type="button"
+                    className="fj-btn-primary text-sm"
+                    disabled={
+                      selectedRole === userAccount.role
+                    }
+                    onClick={() =>
+                      onUpdateRole(selectedRole)
+                    }
+                  >
+                    Update Role
+                  </button>
+                </div>
+              </div>
+            )}
+          </section>
+        )}
       </div>
     </div>
   );

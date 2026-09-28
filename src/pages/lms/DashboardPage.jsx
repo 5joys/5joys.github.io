@@ -289,34 +289,19 @@ function DashboardPage() {
 
             {showForm && (
                 <LeaveRequestForm
-                    remainingBalance={remaining}
+                    balance={balance}
                     onCancel={() =>
                         setShowForm(false)
                     }
                     onSubmit={async (data) => {
-                        try {
-                            setError("");
+                        await createLeaveRequest(
+                            currentUser.employeeNumber,
+                            data
+                        );
 
-                            await createLeaveRequest(
-                                currentUser.employeeNumber,
-                                data
-                            );
+                        setShowForm(false);
 
-                            setShowForm(false);
-
-                            await loadDashboard();
-
-                        } catch (error) {
-                            console.error(
-                                "Failed to submit leave request:",
-                                error
-                            );
-
-                            setError(
-                                error.message ||
-                                "Failed to submit leave request."
-                            );
-                        }
+                        await loadDashboard();
                     }}
                 />
             )}

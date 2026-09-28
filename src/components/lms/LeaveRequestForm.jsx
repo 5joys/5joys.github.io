@@ -19,7 +19,90 @@ function computeDays(startDate, endDate) {
   );
 }
 
-function LeaveRequestForm({ remainingBalance, onCancel, onSubmit }) {
+function getRemainingBalance(balance, leaveType) {
+  if (!balance) {
+    return 0;
+  }
+
+  switch (leaveType) {
+    case "VACATION":
+      return Number(balance.vacationRemaining || 0);
+
+    case "SICK":
+      return Number(balance.sickRemaining || 0);
+
+    case "SOLO_PARENT":
+      return Number(balance.soloParentRemaining || 0);
+
+    case "MATERNAL":
+    case "PATERNAL":
+      return Number(balance.maternalPaternalRemaining || 0);
+
+    default:
+      return 0;
+  }
+}
+
+function getTodayString() {
+  const today = new Date();
+
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, "0");
+  const day = String(today.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}
+
+function getValidationError(
+  leaveType,
+  startDate,
+  endDate,
+  days,
+  remainingBalance
+) {
+  if (!startDate || !endDate) {
+    return "";
+  }
+
+  const today = new Date(`${getTodayString()}T00:00:00`);
+  const start = new Date(`${startDate}T00:00:00`);
+  const end = new Date(`${endDate}T00:00:00`);
+
+  if (start < today) {
+    return "Leave start date cannot be before today.";
+  }
+
+  if (end < start) {
+    return "End date must be on or after the start date.";
+  }
+
+  const requiresAdvanceNotice =
+    leaveType === "VACATION" ||
+    leaveType === "MATERNAL" ||
+    leaveType === "PATERNAL";
+
+  if (requiresAdvanceNotice) {
+    const minimumStartDate = new Date(today);
+
+    minimumStartDate.setDate(
+      minimumStartDate.getDate() + 5
+    );
+
+    if (start < minimumStartDate) {
+      return `${leaveType} leave must be filed at least 5 days in advance.`;
+    }
+  }
+
+  if (days > remainingBalance) {
+    return `You only have ${remainingBalance} day${
+      remainingBalance === 1 ? "" : "s"
+    } remaining for ${leaveType}.`;
+  }
+
+  return "";
+}
+
+function LeaveRequestForm({ balance, onCancel, onSubmit }) {
   const [leaveType, setLeaveType] = useState(LEAVE_TYPES[0]);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
@@ -28,22 +111,57 @@ function LeaveRequestForm({ remainingBalance, onCancel, onSubmit }) {
 
   const days = computeDays(startDate, endDate);
 
-  const handleSubmit = (e) => {
+  const remainingBalance = getRemainingBalance(balance, leaveType);
+
+  const validationError = getValidationError(
+    leaveType,
+    startDate,
+    endDate,
+    days,
+    remainingBalance
+  );
+
+  const isReady =
+    startDate &&
+    endDate &&
+    !validationError;
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
+
+    setError("");
+
     if (!startDate || !endDate) {
       setError("Please select a start and end date.");
       return;
     }
-    if (days <= 0) {
-      setError("End date must be on or after the start date.");
+
+    if (validationError) {
+      setError(validationError);
       return;
     }
-    if (days > remainingBalance) {
-      setError(`You only have ${remainingBalance} day${remainingBalance === 1 ? "" : "s"} remaining.`);
-      return;
+
+    try {
+      await onSubmit({
+        leaveType,
+        startDate,
+        endDate,
+        reason,
+      });
+    } catch (error) {
+      console.error(
+        "Failed to submit leave request:",
+        error
+      );
+
+      setError(
+        error.message ||
+        "Failed to submit leave request."
+      );
     }
-    onSubmit({ leaveType, startDate, endDate, reason });
   };
+
+  const today = getTodayString();
 
   return (
     <div className="lms-modal-backdrop" onClick={onCancel}>
@@ -57,7 +175,10 @@ function LeaveRequestForm({ remainingBalance, onCancel, onSubmit }) {
               id="leaveType"
               className="lms-field-input"
               value={leaveType}
-              onChange={(e) => setLeaveType(e.target.value)}
+              onChange={(e) => {
+                setLeaveType(e.target.value);
+                setError("");
+              }}
             >
               {LEAVE_TYPES.map((t) => (
                 <option key={t} value={t}>{t}</option>
@@ -73,7 +194,11 @@ function LeaveRequestForm({ remainingBalance, onCancel, onSubmit }) {
                 type="date"
                 className="lms-field-input"
                 value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
+                min={today}
+                onChange={(e) => {
+                  setStartDate(e.target.value);
+                  setError("");
+                }}
               />
             </div>
             <div>
@@ -83,7 +208,11 @@ function LeaveRequestForm({ remainingBalance, onCancel, onSubmit }) {
                 type="date"
                 className="lms-field-input"
                 value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
+                min={startDate || today}
+                onChange={(e) => {
+                  setEndDate(e.target.value);
+                  setError("");
+                }}
               />
             </div>
           </div>
@@ -110,8 +239,31 @@ function LeaveRequestForm({ remainingBalance, onCancel, onSubmit }) {
             <span className="fj-display font-semibold">{remainingBalance} days</span>
           </div>
 
-          {error && (
-            <p className="text-sm font-semibold" style={{ color: "var(--red-deep)" }}>{error}</p>
+          {validationError && (
+            <p
+              className="text-sm font-semibold"
+              style={{ color: "var(--red-deep)" }}
+            >
+              {validationError}
+            </p>
+          )}
+
+          {isReady && (
+            <p
+              className="text-sm font-semibold"
+              style={{ color: "var(--cyan-deep)" }}
+            >
+              ✓ Ready to submit
+            </p>
+          )}
+
+          {error && error !== validationError && (
+            <p
+              className="text-sm font-semibold"
+              style={{ color: "var(--red-deep)" }}
+            >
+              {error}
+            </p>
           )}
 
           <div className="flex justify-end gap-3 pt-2">

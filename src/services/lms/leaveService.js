@@ -126,6 +126,18 @@ export async function getLeaveBalance(
     );
 }
 
+export function updateLeaveBalance(
+  employeeNumber,
+  request
+) {
+  return put(
+    `/leave-balances/${encodeURIComponent(
+      employeeNumber
+    )}`,
+    request
+  );
+}
+
 export function approveLeaveRequest(id) {
     return put(
         `/leave-requests/${id}/approve`,

@@ -1,4 +1,10 @@
 import { useEffect, useState } from "react";
+import { useLms } from "../../context/LmsContext";
+
+import {
+  getUser,
+  updateUserRole,
+} from "../../services/lms/userService";
 
 import {
   getEmployees,
@@ -45,6 +51,11 @@ function EmployeesPage() {
 
   const [showLeaveBalanceForm, setShowLeaveBalanceForm] = useState(false);
   const [formError, setFormError] = useState("");
+  const { currentUser } = useLms();
+
+  const isAdmin = currentUser?.role === "ADMIN";
+  const [userAccount, setUserAccount] = useState(null);
+  const [userAccountLoading, setUserAccountLoading] = useState(false);
 
   const stores = [
     ...new Set(
@@ -256,6 +267,51 @@ function EmployeesPage() {
       startIndex + employeesPerPage
     );
 
+  const handleViewUserAccount = async () => {
+    if (!viewEmployee || !isAdmin) return;
+
+    setUserAccountLoading(true);
+    setError("");
+
+    try {
+      const data = await getUser(
+        viewEmployee.employeeNumber
+      );
+
+      setUserAccount(data);
+    } catch (error) {
+      setError(error.message);
+    } finally {
+      setUserAccountLoading(false);
+    }
+  };
+
+  const handleUpdateRole = async (role) => {
+    if (!viewEmployee || !isAdmin) return;
+
+    const confirmed = window.confirm(
+      `Change ${viewEmployee.employeeName}'s system role from ${userAccount.role} to ${role}?`
+    );
+
+    if (!confirmed) return;
+
+    try {
+      setError("");
+
+      await updateUserRole(
+        viewEmployee.employeeNumber,
+        role
+      );
+
+      setUserAccount((prev) => ({
+        ...prev,
+        role,
+      }));
+    } catch (error) {
+      setError(error.message);
+    }
+  };
+
   return (
     <div>
       <div className="flex items-center justify-between mb-1">
@@ -357,6 +413,7 @@ function EmployeesPage() {
                           setViewEmployee(emp);
                           setLeaveBalance(null);
                           setSensitiveEmployee(null);
+                          setUserAccount(null);
                           setError("");
                         }}
                       >
@@ -441,6 +498,14 @@ function EmployeesPage() {
       {viewEmployee && (
         <EmployeeDetails
           employee={viewEmployee}
+
+          userAccount={userAccount}
+          userAccountLoading={userAccountLoading}
+          isAdmin={isAdmin}
+
+          onViewUserAccount={handleViewUserAccount}
+          onUpdateRole={handleUpdateRole}
+
           sensitiveEmployee={sensitiveEmployee}
           sensitiveLoading={sensitiveLoading}
 
@@ -451,6 +516,7 @@ function EmployeesPage() {
             setViewEmployee(null);
             setSensitiveEmployee(null);
             setLeaveBalance(null);
+            setUserAccount(null);
           }}
 
           onViewSensitive={handleViewSensitive}
