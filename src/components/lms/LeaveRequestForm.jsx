@@ -102,7 +102,7 @@ function getValidationError(
 }
 
 function LeaveRequestForm({ balance, onCancel, onSubmit }) {
-  const [leaveType, setLeaveType] = useState(LEAVE_TYPES[0].value);
+  const [leaveType, setLeaveType] = useState(LEAVE_TYPES[0]);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [reason, setReason] = useState("");
@@ -176,8 +176,8 @@ function LeaveRequestForm({ balance, onCancel, onSubmit }) {
               }}
             >
               {LEAVE_TYPES.map((t) => (
-                <option key={t.value} value={t.value}>
-                  {t.label}
+                <option key={t} value={t}>
+                  {t}
                 </option>
               ))}
             </select>
