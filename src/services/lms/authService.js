@@ -1,14 +1,21 @@
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
-import { post } from "./apiClient";
 
-export function changePassword(currentPassword, newPassword) {
+import { get, post } from "./apiClient";
+
+export function changePassword(
+    currentPassword,
+    newPassword
+) {
     return post("/auth/change-password", {
         currentPassword,
         newPassword,
     });
 }
 
-export async function login(employeeNumber, password) {
+export async function login(
+    employeeNumber,
+    password
+) {
     const response = await fetch(
         `${API_BASE_URL}/auth/login`,
         {
@@ -24,7 +31,6 @@ export async function login(employeeNumber, password) {
     );
 
     if (!response.ok) {
-
         const data =
             await response.json();
 
@@ -45,6 +51,8 @@ export async function login(employeeNumber, password) {
 
 export function logout() {
     localStorage.removeItem("lms_token");
+
+    // Temporary cleanup for users from the old version.
     localStorage.removeItem("lms_user");
 }
 
@@ -52,8 +60,6 @@ export function getToken() {
     return localStorage.getItem("lms_token");
 }
 
-export function getStoredUser() {
-    const user = localStorage.getItem("lms_user");
-
-    return user ? JSON.parse(user) : null;
+export function getCurrentUser() {
+    return get("/auth/me");
 }

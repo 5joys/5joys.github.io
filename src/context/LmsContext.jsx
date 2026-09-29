@@ -1,6 +1,7 @@
 import React, {
     createContext,
     useContext,
+    useEffect,
     useMemo,
     useState,
 } from "react";
@@ -8,14 +9,50 @@ import React, {
 import {
     login as apiLogin,
     logout as apiLogout,
-    getStoredUser,
+    getCurrentUser,
+    getToken,
 } from "../services/lms/authService";
 
 const LmsContext = createContext(null);
 
 export function LmsProvider({ children }) {
     const [currentUser, setCurrentUser] =
-        useState(getStoredUser());
+        useState(null);
+
+    const [authLoading, setAuthLoading] =
+        useState(true);
+
+    useEffect(() => {
+        const restoreSession = async () => {
+            const token = getToken();
+
+            if (!token) {
+                setAuthLoading(false);
+                return;
+            }
+
+            try {
+                const user =
+                    await getCurrentUser();
+
+                setCurrentUser({
+                    employeeNumber:
+                        user.employeeNumber,
+                    role:
+                        user.role,
+                });
+
+            } catch {
+                apiLogout();
+                setCurrentUser(null);
+
+            } finally {
+                setAuthLoading(false);
+            }
+        };
+
+        restoreSession();
+    }, []);
 
     const login = async (
         employeeNumber,
@@ -26,20 +63,17 @@ export function LmsProvider({ children }) {
             password
         );
 
-        const user = {
-            employeeNumber: result.employeeNumber,
-            role: result.role,
-        };
-
         localStorage.setItem(
             "lms_token",
             result.token
         );
 
-        localStorage.setItem(
-            "lms_user",
-            JSON.stringify(user)
-        );
+        const user = {
+            employeeNumber:
+                result.employeeNumber,
+            role:
+                result.role,
+        };
 
         setCurrentUser(user);
 
@@ -54,10 +88,14 @@ export function LmsProvider({ children }) {
     const value = useMemo(
         () => ({
             currentUser,
+            authLoading,
             login,
             logout,
         }),
-        [currentUser]
+        [
+            currentUser,
+            authLoading,
+        ]
     );
 
     return (

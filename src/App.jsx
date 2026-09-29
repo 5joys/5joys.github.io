@@ -22,6 +22,8 @@ import CareerManagementPage from "./pages/lms/CareerManagementPage";
 
 import DashboardLayout from "./components/lms/DashboardLayout";
 
+import ProtectedRoute from "./components/lms/ProtectedRoute";
+
 function WebsiteLayout({ children }) {
   return (
     <>
@@ -32,11 +34,16 @@ function WebsiteLayout({ children }) {
   );
 }
 
-function LmsLayout({ children }) {
+function LmsLayout({
+  children,
+  allowedRoles = null,
+}) {
   return (
-    <DashboardLayout>
-      {children}
-    </DashboardLayout>
+    <ProtectedRoute allowedRoles={allowedRoles}>
+      <DashboardLayout>
+        {children}
+      </DashboardLayout>
+    </ProtectedRoute>
   );
 }
 
@@ -130,15 +137,6 @@ function App() {
         />
 
         <Route
-          path="/lms/leave-requests"
-          element={
-            <LmsLayout>
-              <HRLeaveRequestsPage />
-            </LmsLayout>
-          }
-        />
-
-        <Route
           path="/lms/my-leaves"
           element={
             <LmsLayout>
@@ -159,8 +157,17 @@ function App() {
         <Route
           path="/lms/employees"
           element={
-            <LmsLayout>
+            <LmsLayout allowedRoles={["HR", "ADMIN"]}>
               <EmployeesPage />
+            </LmsLayout>
+          }
+        />
+
+        <Route
+          path="/lms/leave-requests"
+          element={
+            <LmsLayout allowedRoles={["HR", "ADMIN"]}>
+              <HRLeaveRequestsPage />
             </LmsLayout>
           }
         />
@@ -168,17 +175,8 @@ function App() {
         <Route
           path="/lms/leave-records"
           element={
-            <LmsLayout>
+            <LmsLayout allowedRoles={["HR", "ADMIN"]}>
               <LeaveRecordsPage />
-            </LmsLayout>
-          }
-        />
-
-        <Route
-          path="/lms/reports"
-          element={
-            <LmsLayout>
-              <ReportsPage />
             </LmsLayout>
           }
         />
@@ -186,8 +184,17 @@ function App() {
         <Route
           path="/lms/careers"
           element={
-            <LmsLayout>
+            <LmsLayout allowedRoles={["HR", "ADMIN"]}>
               <CareerManagementPage />
+            </LmsLayout>
+          }
+        />
+
+        <Route
+          path="/lms/reports"
+          element={
+            <LmsLayout allowedRoles={["HR", "ADMIN"]}>
+              <ReportsPage />
             </LmsLayout>
           }
         />
