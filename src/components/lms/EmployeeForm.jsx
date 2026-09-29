@@ -15,7 +15,7 @@ function EmployeeForm({
   const [birthday, setBirthday] = useState(employee?.birthday || "");
   const [position, setPosition] = useState(employee?.position || "");
   const [managerAppointmentDate, setManagerAppointmentDate] = useState(employee?.managerAppointmentDate || "");
-  const [employmentStatus, setEmploymentStatus] = useState(employee?.employmentStatus || "Active");
+  const [employmentStatus, setEmploymentStatus] = useState(employee?.employmentStatus || "ACTIVE");
   const [sex, setSex] = useState(employee?.sex || "");
   const [isNewStore, setIsNewStore] = useState(false);
   const availableStores = [
@@ -227,8 +227,8 @@ function EmployeeForm({
                   setEmploymentStatus(e.target.value)
                 }
               >
-                <option value="Active">Active</option>
-                <option value="Inactive">Inactive</option>
+                <option value="ACTIVE">ACTIVE</option>
+                <option value="INACTIVE">INACTIVE</option>
               </select>
             </div>
 
