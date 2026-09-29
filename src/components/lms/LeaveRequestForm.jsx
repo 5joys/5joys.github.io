@@ -124,7 +124,8 @@ function LeaveRequestForm({ balance, onCancel, onSubmit }) {
   const isReady =
     startDate &&
     endDate &&
-    !validationError;
+    !validationError &&
+    !error;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -149,11 +150,6 @@ function LeaveRequestForm({ balance, onCancel, onSubmit }) {
         reason,
       });
     } catch (error) {
-      console.error(
-        "Failed to submit leave request:",
-        error
-      );
-
       setError(
         error.message ||
         "Failed to submit leave request."
