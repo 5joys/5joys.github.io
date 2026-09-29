@@ -46,7 +46,7 @@ function LeaveRequestDetails({ request, remainingBalance, onClose, onApprove, on
         </div>
 
         <Row label="Employee" value={request.employeeName} />
-        <Row label="Department" value={request.department} />
+        <Row label="Store Assignment" value={request.storeAssignment } />
         <Row label="Leave Type" value={request.leaveType} />
         <Row label="Date" value={dateRange} />
         <Row label="Duration" value={`${request.days} ${request.days === 1 ? "day" : "days"}`} />
