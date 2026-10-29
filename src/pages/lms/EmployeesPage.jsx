@@ -91,7 +91,7 @@ function EmployeesPage() {
         document.createElement("a");
 
       link.href = url;
-      link.download = "Employees.xlsx";
+      link.download = "Masterlist.xlsx";
 
       document.body.appendChild(link);
       link.click();
@@ -102,7 +102,7 @@ function EmployeesPage() {
       console.error(error);
 
       setError(
-        "Failed to export employees."
+        "Failed to export masterlist."
       );
     }
   };
